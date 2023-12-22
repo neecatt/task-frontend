@@ -59,7 +59,6 @@ const FormComponent = () => {
         sectors: selectedSectors,
         agreeTerms: termsChecked,
       };
-      console.log("Form submitted successfully:", entryData);
       submitEntry(entryData);
     }
   };
