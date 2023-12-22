@@ -11,7 +11,17 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import getSectors from "../api/getSectors";
 import convertToHierarchy from "../helpers/convertToHierarchy";
 import submitEntry from "../api/submitEntry";
+import { showErrorToast, showSuccessToast } from "../helpers/showToasts";
+import loadLatestData from "../helpers/loadLatestData";
 
+/**
+ * FormComponent is a component that renders a form with input fields, checkboxes, and a submit button.
+ * It allows the user to enter their name, select sectors, and agree to the terms and conditions.
+ * When the form is submitted, it validates the input and calls the submitEntry function with the entered data.
+ * After the submission, the user can update the data by submitting the form again.
+ *
+ * @returns {JSX.Element} The rendered FormComponent.
+ */
 const FormComponent = () => {
   const [selectedSectors, setSelectedSectors] = useState([]);
   const [termsChecked, setTermsChecked] = useState(false);
@@ -21,14 +31,10 @@ const FormComponent = () => {
   const sectors = convertToHierarchy(sectorsData);
 
   useEffect(() => {
-    async function loadSectors() {
-      const response = await getSectors();
-      setSectorsData(response);
-    }
-    loadSectors();
+    loadLatestData(setSectorsData, getSectors);
   }, []);
 
-  //check if the user has selected at least one sector and agreed to the terms and stated their name
+  // Validate the input and call the submitEntry function with the entered data.
   const handleSubmit = (values) => {
     const hasNumber = /\d/.test(values.name);
 
@@ -38,22 +44,9 @@ const FormComponent = () => {
       selectedSectors.length === 0 ||
       hasNumber
     ) {
-      toast({
-        title: "Form Incomplete",
-        description:
-          "Please enter your name, select at least one sector, and agree to the terms.",
-        status: "error",
-        duration: 2000,
-        isClosable: true,
-      });
+      showErrorToast(toast);
     } else {
-      toast({
-        title: "Form Submitted",
-        description: "Form submitted successfully",
-        status: "success",
-        duration: 2000,
-        isClosable: true,
-      });
+      showSuccessToast(toast);
       const entryData = {
         name: values.name,
         sectors: selectedSectors,
@@ -63,6 +56,7 @@ const FormComponent = () => {
     }
   };
 
+  // Render sectors checkboxes recursively.
   const renderCheckboxes = (data, level = 1) => {
     return (
       <VStack align="start" ml={level * 4} key={data.id}>
@@ -78,6 +72,7 @@ const FormComponent = () => {
     );
   };
 
+  // Handle the selection of a sector.
   const handleSelection = (sectorId) => {
     if (selectedSectors.includes(sectorId)) {
       setSelectedSectors(selectedSectors.filter((id) => id !== sectorId));
@@ -107,7 +102,7 @@ const FormComponent = () => {
                   placeholder="Name"
                   required
                   errorBorderColor="red.400"
-                  mb={4} // Add margin bottom
+                  mb={4}
                 ></Input>
                 <Box maxW="400px" m="auto">
                   <Box fontSize="lg" mb={4}>
@@ -118,7 +113,7 @@ const FormComponent = () => {
                     borderRadius="md"
                     maxHeight="300px"
                     overflowY="auto"
-                    mb={4} // Add margin bottom
+                    mb={4}
                   >
                     {/* Render sectors checkboxes */}
                     {sectors.map((sector) => renderCheckboxes(sector))}
